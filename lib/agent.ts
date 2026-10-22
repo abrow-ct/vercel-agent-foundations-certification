@@ -8,5 +8,9 @@
  *
  * Workshop docs: https://agent-foundations-certification.vercel.app/docs/chat-agent
  */
+import { ToolLoopAgent } from "ai";
 
-export {};
+export const shoppingAgent = new ToolLoopAgent({ 
+    model: "anthropic/claude-sonnet-5",
+    instructions: "Respond like a pirate.",
+});
