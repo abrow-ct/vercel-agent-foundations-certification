@@ -24,24 +24,10 @@ export const searchProducts = tool({
         `Optional, free-text search terms describing what the user is looking for, e.g. 'hoodie' or 'water bottle'.`,
       ),
       category: z
-      .enum([
-        "bottles",
-        "cups",
-        "mugs",
-        "desk",
-        "stationery",
-        "accessories",
-        "bags",
-        "hats",
-        "t-shirts",
-        "hoodies",
-        "socks",
-        "tech",
-        "books",
-      ])
+      .string()
       .optional()
       .describe(
-        `Optional category slug to filter results. Only set this when the user clearly wants a specific category.`,
+        `Optional category slug to filter results. Only set this when the user clearly wants a specific category. Use the getAllCategories tool to get all valid categories.`,
       ),
   }),
   execute: async ({ query, category }) => {
@@ -68,6 +54,28 @@ export const searchProducts = tool({
       const message =
         err instanceof ApiRequestError ? err.message : "Unknown error";
       return { count: 0, products: [], error: message };
+    }
+  },
+});
+
+export const getAllCategories = tool({
+  description: `List every product category available in the Vercel swag store, along with the number of products in each. Use this when the user asks what categories exist, what kinds of products are sold, or wants to browse the store at a high level.`,
+  inputSchema: z.object({}),
+  execute: async () => {
+    try {
+      const categories = await getCategories();
+      return {
+        count: categories.length,
+        categories: categories.map((c) => ({
+          slug: c.slug,
+          name: c.name,
+          productCount: c.productCount,
+        })),
+      };
+    } catch (err) {
+      const message =
+        err instanceof ApiRequestError ? err.message : "Unknown error";
+      return { count: 0, categories: [], error: message };
     }
   },
 });
