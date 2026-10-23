@@ -98,6 +98,46 @@ export const returnOrder = tool({
   },
 });
 
+export const getProductDetails = tool({
+  description: `Get the full details and live stock for ONE specific product, by its id or slug. Use this whenever the user asks about a particular item, e.g. "tell me more about the black hoodie" or "is the desk mat in stock?". Returns every image, tags and current stock level, which searchProducts does not. If you only know the product's name, call searchProducts first to find its slug.`,
+  inputSchema: z.object({
+    idOrSlug: z
+      .string()
+      .describe(
+        `The product's id or slug, exactly as returned in a searchProducts result. Don't guess it from the product name.`,
+      ),
+  }),
+  execute: async ({ idOrSlug }) => {
+    "use step";
+    try {
+      const [product, stock] = await Promise.all([
+        getProductById(idOrSlug),
+        getProductStock(idOrSlug),
+      ]);
+      return {
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        description: product.description,
+        price: product.price,
+        currency: product.currency,
+        category: product.category,
+        images: product.images,
+        tags: product.tags,
+        featured: product.featured,
+        createdAt: product.createdAt,
+        stock: stock.stock,
+        inStock: stock.inStock,
+        lowStock: stock.lowStock,
+      };
+    } catch (err) {
+      const message =
+        err instanceof ApiRequestError ? err.message : "Unknown error";
+      return { error: message };
+    }
+  },
+});
+
 export const getSupportTickets = tool({
   description: `List support tickets from the back office within a date range. Each ticket includes status, priority, category, assignee (staff username or null when unassigned), the related customer/order, and timestamps. Use this for triaging the support queue, spotting spikes in a category, checking workload by assignee, or auditing unresolved urgent tickets. History covers ~last 180 days. Summarize across the rows in your reply rather than dumping them; for more than ~10 rows of arithmetic, note that exact joins and aggregates are limited until a sandbox tool is added.`,
   inputSchema: z.object({
